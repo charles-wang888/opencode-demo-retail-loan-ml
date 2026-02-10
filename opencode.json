@@ -1,0 +1,65 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "deepseek-chat",
+  "server": {
+    "port": 4096,
+    "hostname": "0.0.0.0"
+  },
+  "mcp": {
+    "loan_agent": {
+      "type": "local",
+      "command": [
+        "python",
+        "-m",
+        "tools.loan_agent_mcp_server"
+      ],
+      "enabled": true,
+      "environment": {}
+    }
+  },
+  "tools": {
+    "mcp__loan_agent__*": false
+  },
+  "agent": {
+    "build": {
+      "description": "零售贷款智能运营主 Agent，仅通过 Task 委派子 Agent。当用户已提供客户ID并请求推荐时，必须只委派 recommendation_agent，不得委派 data_agent",
+      "mode": "primary",
+      "tools": {
+        "mcp__loan_agent__*": false,
+        "task": true
+      },
+      "permission": {
+        "task": "allow"
+      }
+    },
+    "data_agent": {
+      "description": "负责数据加载与数据概况查询，以及列出客户ID、产品ID供推荐使用。",
+      "mode": "subagent",
+      "prompt": "你是零售贷款场景的数据助手。你只能使用 load_data、get_data_summary、list_customers、list_products 四个工具。\n用户可能要求：加载数据、查看数据概况、有哪些客户、有哪些产品、客户ID列表、产品ID列表等。get_data_summary 会返回示例客户ID和产品ID；若用户需要更多或完整列表，请调用 list_customers 或 list_products（可传 limit，默认50）。用中文简要汇总结果。",
+      "tools": {
+        "mcp__loan_agent__load_data": true,
+        "mcp__loan_agent__get_data_summary": true,
+        "mcp__loan_agent__list_customers": true,
+        "mcp__loan_agent__list_products": true
+      }
+    },
+    "training_agent": {
+      "description": "负责贷款意愿模型与推荐模型的训练。用于执行训练流程并汇报指标。",
+      "mode": "subagent",
+      "prompt": "你是零售贷款场景的模型训练助手。你只能使用 train_models 工具。\n用户可能要求：训练模型、开始训练、训练意愿模型和推荐模型等。调用 train_models 后，用中文汇总训练结果（如 ROC-AUC、准确率等）。若未加载数据，工具会先自动加载再训练。",
+      "tools": {
+        "mcp__loan_agent__train_models": true
+      }
+    },
+    "recommendation_agent": {
+      "description": "负责个性化推荐、贷款意愿预测、相似产品查询。需要 user_id 或 item_id 时由主 Agent 或用户提供。",
+      "mode": "subagent",
+      "prompt": "你是零售贷款场景的推荐与预测助手。你只能使用 recommend、predict_propensity、similar_items 三个工具。\n用户可能要求：为某客户推荐产品（需 user_id，可选 top_k）、预测某客户对某产品的意愿（需 user_id、item_id）、查找相似产品（需 item_id）。请根据请求调用相应工具并传入必要参数，用中文汇总结果。若用户不知道客户ID或产品ID，请说明可先让数据助手「查看数据概况」或「列出客户/产品」获取ID后再做推荐或预测。",
+      "tools": {
+        "mcp__loan_agent__recommend": true,
+        "mcp__loan_agent__predict_propensity": true,
+        "mcp__loan_agent__similar_items": true
+      }
+    }
+  }
+}

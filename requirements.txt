@@ -1,0 +1,23 @@
+# OpenCode SDK（仅命令行 Agent 需要；仅 Web UI 可省略，若安装失败可试 pip install --pre opencode-ai）
+opencode-ai>=0.1.0
+
+# 异步
+anyio>=4.0.0
+
+# Web UI
+gradio>=4.0.0
+
+# MCP 服务器（命令行 Agent 的 loan_agent 工具需通过 MCP stdio 暴露）
+mcp>=1.0.0
+
+# 环境
+python-dotenv>=1.0.0
+
+# 数据与模型依赖
+streamlit>=1.38.0
+pandas>=2.1.4
+scikit-learn>=1.4.2
+numpy>=1.26.4
+altair>=5.2.0
+recommenders>=1.2.1
+plotly>=5.0.0
